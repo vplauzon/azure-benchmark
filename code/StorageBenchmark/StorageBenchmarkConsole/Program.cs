@@ -1,4 +1,5 @@
-﻿using Azure.Identity;
+﻿using Azure;
+using Azure.Identity;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Specialized;
 using System.Diagnostics;
@@ -16,15 +17,21 @@ namespace StorageBenchmarkConsole
             else
             {
                 var sourceRoot = args[0];
+                var sasToken = args.Length > 1 ? args[1] : null;
 
                 Console.WriteLine($"Source Root Blob Url:  {sourceRoot}");
+                Console.WriteLine($"SAS token:  {sasToken}");
                 Console.WriteLine();
 
                 try
                 {
-                    var sourceBlobClient = new BlockBlobClient(
-                        new Uri(sourceRoot),
-                        new DefaultAzureCredential());
+                    var sourceBlobClient = sasToken == null
+                        ? new BlockBlobClient(
+                            new Uri(sourceRoot),
+                            new DefaultAzureCredential())
+                        : new BlockBlobClient(
+                            new Uri(sourceRoot),
+                            new AzureSasCredential(sasToken));
                     var totalElapsed = TimeSpan.Zero;
                     var loopLength = 5;
                     var loop = loopLength;
